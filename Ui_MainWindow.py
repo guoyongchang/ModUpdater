@@ -6,30 +6,29 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5.QtCore import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-class Ui_MainWindow(object):
-    #支持窗口拖动,重写两个方法
+from PyQt5.QtCore import Qt
+class ModUpdater(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+    #重写三个方法使我们的Example窗口支持拖动,上面参数window就是拖动对象
     def mousePressEvent(self, event):
-        if event.button()==QtWidgets.LeftButton:
+        if event.button()==Qt.LeftButton:
             self.m_drag=True
             self.m_DragPosition=event.globalPos()-self.pos()
             event.accept()
- 
     def mouseMoveEvent(self, QMouseEvent):
-        if QMouseEvent.buttons() and QtWidgets.LeftButton:
+        if Qt.LeftButton and self.m_drag:
             self.move(QMouseEvent.globalPos()-self.m_DragPosition)
             QMouseEvent.accept()
- 
     def mouseReleaseEvent(self, QMouseEvent):
         self.m_drag=False
+        
+class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(300, 150)
         MainWindow.setStyleSheet("background-color: rgb(92, 73, 120);")
-        self.centralWidget = QtWidgets.QWidget(MainWindow)
-        self.centralWidget.setObjectName("centralWidget")
         #打开后定位
         MainWindow.m_DragPosition=MainWindow.pos()
         #设置无边框
@@ -37,10 +36,15 @@ class Ui_MainWindow(object):
         #设置可拖拽
         MainWindow.setMouseTracking(True)
         
+        self.centralWidget = QtWidgets.QWidget(MainWindow)
+        self.centralWidget.setObjectName("centralWidget")
         self.pushButton_Close = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_Close.setGeometry(QtCore.QRect(275, 0, 25, 25))
         self.pushButton_Close.setAutoFillBackground(False)
-        self.pushButton_Close.setStyleSheet("color: rgb(245, 5, 5);""font-weight:bold;""font-size:18px;""border:none;")
+        self.pushButton_Close.setStyleSheet("color: rgb(245, 5, 5);\n"
+"font-weight:bold;\n"
+"font-size:18px;\n"
+"border:none;")
         self.pushButton_Close.setObjectName("pushButton_Close")
         self.widget_Content = QtWidgets.QWidget(self.centralWidget)
         self.widget_Content.setGeometry(QtCore.QRect(0, 25, 300, 125))
@@ -64,6 +68,7 @@ class Ui_MainWindow(object):
         self.lable_NewVersion.setObjectName("lable_NewVersion")
         self.progressBar = QtWidgets.QProgressBar(self.widget_Content)
         self.progressBar.setGeometry(QtCore.QRect(20, 90, 260, 30))
+        self.progressBar.setStyleSheet("background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(255, 0, 0, 255), stop:0.339795 rgba(255, 0, 0, 255), stop:0.339799 rgba(255, 255, 255, 255), stop:0.662444 rgba(255, 255, 255, 255), stop:0.662469 rgba(0, 0, 255, 255), stop:1 rgba(0, 0, 255, 255));")
         self.progressBar.setProperty("value", 100)
         self.progressBar.setTextVisible(False)
         self.progressBar.setFormat("")
@@ -85,7 +90,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(MainWindow)
-        #self.pushButton_Close.clicked.connect(self.pushButton_Close.close)
+        self.pushButton_Close.clicked.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -104,7 +109,7 @@ class Ui_MainWindow(object):
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
+    MainWindow = ModUpdater()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
