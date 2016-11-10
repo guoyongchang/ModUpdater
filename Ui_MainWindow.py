@@ -11,6 +11,9 @@ from PyQt5.QtCore import Qt
 class ModUpdater(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("resources/Server.ico"),QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setWindowIcon(icon)
     #重写三个方法使我们的Example窗口支持拖动,上面参数window就是拖动对象
     def mousePressEvent(self, event):
         if event.button()==Qt.LeftButton:
