@@ -1,0 +1,11 @@
+{
+    "FilesAddress": "http://www.bigcraft.cn:2333/Mods.json",
+    "Name": "Bigcraft",
+    "Port": 2333,
+    "ServerIcon": "http://www.bigcraft.cn:2333/server.ico",
+    "ServerVersion": "Bigcraft-v2.3x11.00007",
+    "UpdateClientVersion": "0.2",
+    "Updates": "10191112:\u53d1\u5e03\u5ba2\u6237\u7aef\n10191722:\u5fd8\u8bb0\u6dfb\u52a0[\u65e0\u4e2d\u751f\u6709]....\u73b0\u5728\u52a0\u597d\u4e86~\n10192147:\u5220\u9664\u602a\u7269\u6389\u843d\u5305\n\t\u589e\u52a0[BC\u6838\u5fc3]\u3001[BC\u5de5\u5382]\n10192147:\u589e\u52a0\u4e00\u5806Mod\n10281136:\u589e\u52a0[\u66f4\u591a\u5b9e\u7528\u8bbe\u5907]\n10282045:\u4fee\u590d\u81f4\u547dBug",
+    "Url": "http://www.bigcraft.cn",
+    "Version": "Bigcraft-v2.3x11.00007"
+}

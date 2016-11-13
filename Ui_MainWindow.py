@@ -8,6 +8,108 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+import Entity
+import os
+import json
+import Helper
+global app
+global ServerMods
+ServerMods = []
+global LocalMods
+LocalMods = []
+global mw
+def U():
+    State = mw.findChild(QtWidgets.QLabel,'lable_NowEvent')
+    NeedDeleteMods = []
+    NeedDownloadMods = []
+    #判断哪些Mod需要删除
+    for Mod in ServerMods:
+        if Mod.Delete is True:
+            #判断是否在本地存在 如果不存在不添加
+            if os.path.exists(Mod.Path):
+                NeedDeleteMods.append(Mod)
+        else:
+            if os.path.exists(Mod.Path) is False:
+                NeedDownloadMods.append(Mod)
+            else:#文件存在 判断是否和服务端MD5相等 不等即损坏 需下载
+                NeedCheckMod = None
+                for x in LocalMods:
+                    if os.path.split(x.Path)[1] == os.path.split(Mod.Path)[1]:
+                        NeedCheckMod = x;
+                        break;
+                if not NeedCheckMod.MD5 == Mod.MD5:
+                    NeedDeleteMods.append(NeedCheckMod)
+                    NeedDownloadMods.append(Mod)
+    #处理要删除的Mod
+    for Mod in NeedDeleteMods:
+        os.remove(Mod.Path)
+    #处理要下载的Mod 关联进度条
+    Q = mw.findChild(QtWidgets.QProgressBar,'progressBar')
+    for Mod in NeedDownloadMods:
+        State.setText(os.path.split(Mod.Path)[1])
+        Helper.downloadFile(Mod.Href,Mod.Path,True,Q,app)
+    #更新完成提示框
+    ConfirmDialog=QtWidgets.QMessageBox(mw)
+    ConfirmDialog.setStyleSheet("background-color:#FFFFFF;")
+    ConfirmDialog.setText(u"更新完成!")
+    ConfirmDialog.setWindowTitle(u"提示")
+    ConfirmDialog.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    ConfirmDialog.buttons()[0].setText(u"好")
+    ConfirmDialog.exec_()
+    State.setText(u"完毕,可以愉悦的启动游戏了")
+    UpdaterConfig.Version = UpdaterConfig.ServerVersion
+    #更新完成颜色还原
+    mw.findChild(QtWidgets.QLabel,'lable_NewVersion').setStyleSheet("QLabel{color:#98FB98;}")
+    mw.findChild(QtWidgets.QLabel,'lable_NowVersion').setText(UpdaterConfig.Version)
+    Helper.saveBinDataToFile(json.dumps(vars(UpdaterConfig),sort_keys=True, indent=4),'Updater.json')
+def Update(UpdaterConfig,IsCompulsory=False):
+    if IsCompulsory is False:
+        if UpdaterConfig.Version == UpdaterConfig.ServerVersion:
+            return;
+    State = mw.findChild(QtWidgets.QLabel,'lable_NowEvent')
+    State.setVisible(True)
+    State.setText(u"检查新版本中...")
+    mw.findChild(QtWidgets.QLabel,'lable_NewVersion').setStyleSheet("QLabel{color:#D3391F;}")
+    ConfirmDialog=QtWidgets.QMessageBox(mw)
+    ConfirmDialog.setStyleSheet("background-color:#FFFFFF;")
+    ConfirmDialog.setText(u"发现客户端新版本:%s\n更新内容\n%s\n是否更新?"%(UpdaterConfig.ServerVersion,UpdaterConfig.Updates.strip()))
+    ConfirmDialog.setWindowTitle(u"发现新版本") 
+    ConfirmDialog.setIcon(QtWidgets.QMessageBox.Information)
+    ConfirmDialog.setStandardButtons(QtWidgets.QMessageBox.Ok|QtWidgets.QMessageBox.Cancel)
+    ConfirmDialog.buttons()[0].setText(u"更")
+    ConfirmDialog.buttons()[0].setStyleSheet("background-color:#FFFFFF;")
+    ConfirmDialog.buttons()[1].setText(u"不更")
+    ConfirmDialog.buttons()[1].setStyleSheet("background-color:#FFFFFF;")
+    clicked = ConfirmDialog.exec_()
+    if clicked == 1024:
+        State.setText(u"更新前准备中...")
+        U()
+    else:
+        State.setText(u"用户拒绝更新,已取消...")
+def InitClient():
+    #判断Config是否存在,不存在写一个默认的进去
+    if not os.path.exists('./Updater.json'):
+        DefaultConfig = Entity.Updater("http://www.baidu.cn","A",80,"A_0.1",False)
+        Helper.saveBinDataToFile(json.dumps(vars(DefaultConfig),sort_keys=True, indent=4),'Updater.json')
+
+    configFile = open('./Updater.json','r')
+    #读取Config文件
+    global UpdaterConfig
+    UpdaterConfig = json.load(configFile,object_hook=Entity.ConvertUpdaterHook)
+    configFile.close()
+    UpdaterConfig.LoadServerInfo()
+    UpdaterConfig.ServerImage()
+    res = Helper.getUrlRespHtml_multiTry(UpdaterConfig.FilesAddress)
+
+    for jsonobject in json.loads(str(res,encoding="utf8"),object_hook=Entity.ConvertModHook):
+        ServerMods.append(jsonobject)
+    Helper.appendModInfo(LocalMods)
+
+    mw.findChild(QtWidgets.QLabel,'lable_NowVersion').setText(UpdaterConfig.Version)
+    mw.findChild(QtWidgets.QLabel,'lable_NewVersion').setText(UpdaterConfig.ServerVersion)
+    mw.findChild(QtWidgets.QLabel,'label_Title').setText(UpdaterConfig.Name)
+    Update(UpdaterConfig,False)
+
 class ModUpdater(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -15,6 +117,10 @@ class ModUpdater(QtWidgets.QMainWindow):
         icon.addPixmap(QtGui.QPixmap("resources/Server.ico"),QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
     #重写三个方法使我们的Example窗口支持拖动,上面参数window就是拖动对象
+    def showEvent(self,e):
+        InitClient()
+    def ReUpdate(self):
+        Update(UpdaterConfig,True)
     def mousePressEvent(self, event):
         if event.button()==Qt.LeftButton:
             self.m_drag=True
@@ -102,19 +208,19 @@ class Ui_MainWindow(object):
         self.pushButton_Close.setText(_translate("MainWindow", "×"))
         self.lable_NowVersion_Read.setText(_translate("MainWindow", "当前版本:"))
         self.lable_NewVersion_Read.setText(_translate("MainWindow", "最新版本:"))
-        self.lable_NowVersion.setText(_translate("MainWindow", "TextLabel"))
-        self.lable_NewVersion.setText(_translate("MainWindow", "TextLabel"))
+        self.lable_NowVersion.setText(_translate("MainWindow", "加载中..."))
+        self.lable_NewVersion.setText(_translate("MainWindow", "加载中..."))
         self.pushButton.setText(_translate("MainWindow", "更新|修复"))
-        self.lable_NowEvent.setText(_translate("MainWindow", "TextLabel"))
-        self.label_Title.setText(_translate("MainWindow", "TextLabel"))
+        self.pushButton.clicked.connect(MainWindow.ReUpdate)
+        self.lable_NowEvent.setText(_translate("MainWindow", ""))
+        self.label_Title.setText(_translate("MainWindow", "更新器"))
 
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = ModUpdater()
+    mw = ModUpdater()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    ui.setupUi(mw)
+    mw.show()
     sys.exit(app.exec_())
-

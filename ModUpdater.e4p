@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-5.1.dtd">
 <!-- eric project file for project ModUpdater -->
-<!-- Saved: 2016-11-10, 22:12:05 -->
+<!-- Saved: 2016-11-13, 18:58:53 -->
 <!-- Copyright (C) 2016 Bigcraft, 1038798620@qq.com -->
 <Project version="5.1">
   <Language>en_US</Language>
@@ -15,6 +15,7 @@
   <Eol index="-1"/>
   <Sources>
     <Source>Entity.py</Source>
+    <Source>Helper.py</Source>
     <Source>Ui_MainWindow.py</Source>
   </Sources>
   <Forms>
